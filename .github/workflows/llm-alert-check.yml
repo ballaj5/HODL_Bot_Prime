@@ -1,0 +1,32 @@
+name: LLM Alert Check
+
+on:
+  push:
+    paths:
+      - 'telegram/**'
+      - 'llm/**'
+      - 'tests/**'
+      - '.github/workflows/llm-alert-check.yml'
+  pull_request:
+
+jobs:
+  test-llm-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies from primary source
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run LLM alert tests
+        run: |
+          pytest tests/test_llm_alert.py

@@ -1,0 +1,28 @@
+# Bytecode and cache
+**/__pycache__/
+*.py[cod]
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Secrets and environment variables
+.env
+.env.*
+*.lock
+
+# Logs and databases
+logs/
+!logs/.gitkeep
+*.log
+*.sqlite
+
+# Large data and model files
+# Note: Re-add specific model/data files you want to track with `!models/my_model.pkl`
+models/
+!models/.gitkeep
+data/
+!data/.gitkeep
+
+# LLM-generated output
+llm/*.jsonl

@@ -1,0 +1,39 @@
+name: LLM Alert & Backend Test
+
+on:
+  push:
+    paths:
+      - 'src/llm/**'
+      - 'src/telegram/send_alert.py'
+      - '.github/workflows/llm-test.yml'
+  workflow_dispatch:
+
+jobs:
+  test-llm:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run LLM handler test
+      # Use the new path for the test script
+      run: python src/llm/llm_test.py
+
+    - name: Run Telegram alert test
+      env:
+        TELEGRAM_BOT_TOKEN: dummy
+        TELEGRAM_CHAT_ID: dummy
+        LLM_BACKEND: 'openai'
+      # Use the new path for the send_alert script
+      run: python src/telegram/send_alert.py

@@ -1,0 +1,30 @@
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files
+.env
+.env.*
+
+# Large data, models, and log files
+# These should be mounted as volumes, not built into the image
+data/
+models/
+logs/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Documentation
+README.md
