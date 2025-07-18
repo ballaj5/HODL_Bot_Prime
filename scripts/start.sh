@@ -7,6 +7,11 @@ timestamp() {
 echo "$(timestamp) 🔁 Starting Crypto Bot..."
 mkdir -p /app/logs
 
+# --- Initialize the database first ---
+echo "$(timestamp) 🔍 Initializing database..."
+python3 -m src.utils.db_init
+# ------------------------------------
+
 report_health() {
   local service="$1"
   local status="$2"
@@ -18,7 +23,6 @@ run_with_retry() {
   local name="$2"
   for i in $(seq 1 3); do
     echo "$(timestamp) 🔁 Attempt $i for $name..."
-    # Use python -m to run the module, which fixes all import errors
     python3 -m "$module_path" && report_health "$name" "Success" && return 0
     sleep 2
   done
@@ -31,11 +35,9 @@ run_with_retry "src.data_fetch.fetch_futures_data" "Fetch Data"
 run_with_retry "src.models.train_predictor"      "Train Model"
 run_with_retry "src.models.predict"              "Run Predictions"
 
-# The alert script now reads from the DB, so we run it once without retry
 echo "$(timestamp) 📣 Generating and sending alerts..."
 python3 -m src.telegram.send_alert
 
-# Run the dashboard as a module in the background
 if [ -f "src/dashboard/app.py" ]; then
     echo "$(timestamp) 🚀 Launching Dash dashboard..."
     python3 -m src.dashboard.app &

@@ -3,7 +3,8 @@ import sqlite3
 import threading
 import logging
 import json
-from .paths import get_path
+# Use absolute import from the src package
+from src.utils.paths import get_path
 
 logger = logging.getLogger(__name__)
 DB_FILE = get_path("signals.db")
@@ -25,14 +26,13 @@ def init_db():
         )
     """)
     conn.commit()
-    logger.info("Database initialized.")
+    logger.info("Database initialized successfully.")
 
 def store_signal(signal_id: str, data: dict):
     from datetime import datetime
     conn = get_db_conn()
     cursor = conn.cursor()
     try:
-        # Serialize the dictionary to a JSON string for storage
         json_data = json.dumps(data)
         cursor.execute("""
             INSERT INTO signals (id, signal_data, timestamp) VALUES (?, ?, ?)

@@ -23,11 +23,12 @@ def simulate_10m(symbol: str):
     try:
         path_1m = f"data/history/{symbol}USDT_1m.csv"
         if not os.path.exists(path_1m):
+            # FIX: The emoji is now correctly inside the f-string
             logging.warning(f"⚠️ Cannot simulate 10m for {symbol}, 1m data missing.")
             return
         df_1m = pd.read_csv(path_1m, parse_dates=['timestamp'])
         df_1m = df_1m.set_index('timestamp')
-        # FIX: Use '10min' instead of deprecated '10T'
+        # Use '10min' instead of deprecated '10T'
         resampled_df = df_1m.resample('10min').agg({
             'open': 'first', 'high': 'max', 'low': 'min', 'close': 'last', 'volume': 'sum'
         }).dropna().reset_index()
