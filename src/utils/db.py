@@ -2,66 +2,64 @@
 import sqlite3
 import threading
 import logging
-from .paths import get_path # Correct relative import
+import json
+from .paths import get_path
 
 logger = logging.getLogger(__name__)
-
 DB_FILE = get_path("signals.db")
 thread_local = threading.local()
 
 def get_db_conn():
-    """Gets a thread-safe database connection."""
     if not hasattr(thread_local, 'conn'):
         thread_local.conn = sqlite3.connect(DB_FILE, check_same_thread=False)
     return thread_local.conn
 
 def init_db():
-    """Initializes the database schema if it doesn't exist."""
     conn = get_db_conn()
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS signals (
-            symbol TEXT PRIMARY KEY,
-            last_signal TEXT,
+            id TEXT PRIMARY KEY,
+            signal_data TEXT,
             timestamp TEXT
         )
     """)
     conn.commit()
-    logger.info("Database initialized successfully.")
+    logger.info("Database initialized.")
 
-def store_signal(symbol: str, signal: str):
-    """Stores or updates a signal for a given symbol."""
+def store_signal(signal_id: str, data: dict):
     from datetime import datetime
     conn = get_db_conn()
     cursor = conn.cursor()
     try:
+        # Serialize the dictionary to a JSON string for storage
+        json_data = json.dumps(data)
         cursor.execute("""
-            INSERT INTO signals (symbol, last_signal, timestamp)
-            VALUES (?, ?, ?)
-            ON CONFLICT(symbol) DO UPDATE 
-              SET last_signal=excluded.last_signal, timestamp=excluded.timestamp
-        """, (symbol, signal, datetime.utcnow().isoformat()))
+            INSERT INTO signals (id, signal_data, timestamp) VALUES (?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET signal_data=excluded.signal_data, timestamp=excluded.timestamp
+        """, (signal_id, json_data, datetime.utcnow().isoformat()))
         conn.commit()
     except sqlite3.Error as e:
-        logger.error(f"Failed to store signal for {symbol}: {e}")
+        logger.error(f"Failed to store signal {signal_id}: {e}")
         conn.rollback()
 
-def load_last_signal(symbol: str) -> str | None:
-    """Loads the last recorded signal for a symbol."""
+def load_all_signals() -> list:
+    """Loads all signals from the database from the latest run."""
     conn = get_db_conn()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT last_signal FROM signals WHERE symbol = ?", (symbol,))
-        row = cursor.fetchone()
-        return row[0] if row else None
+        cursor.execute("SELECT id, signal_data FROM signals")
+        rows = cursor.fetchall()
+        signals = []
+        for row_id, json_data in rows:
+            symbol, timeframe = row_id.split('-')
+            data = json.loads(json_data)
+            signals.append({
+                "symbol": symbol,
+                "timeframe": timeframe,
+                **data
+            })
+        return signals
     except sqlite3.Error as e:
-        logger.error(f"Failed to load signal for {symbol}: {e}")
-        return None
-
-def should_alert(symbol: str, new_signal: str) -> bool:
-    """Checks if a new signal is different from the last recorded one."""
-    last = load_last_signal(symbol)
-    if last != new_signal:
-        logger.info(f"🔔 New alert-worthy signal for {symbol}: {new_signal} (previously: {last})")
-        return True
-    return False
+        logger.error(f"Failed to load all signals: {e}")
+        return []
