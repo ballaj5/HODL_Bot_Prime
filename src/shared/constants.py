@@ -6,8 +6,8 @@ to avoid duplication across different scripts.
 
 SYMBOLS = ["BTC", "ETH", "SOL", "DOGE", "XRP", "ADA", "WIF", "1000PEPE"]
 
-# --- Define the list of coins for perpetual futures alerts ---
-# This includes all symbols by default, but you can customize it here.
+# --- NEW: Define the list of coins for perpetual futures alerts ---
+# For now, this includes all symbols, but you can customize it here.
 FUTURES_PERPETUAL_COINS = SYMBOLS
 
 # Timeframes to fetch directly from the exchange

@@ -5,7 +5,6 @@ import logging
 import sys
 from src.utils.database import get_db_connection
 from src.llm.service import generate_commentary
-# --- UPDATED: Import the new constant ---
 from src.shared.constants import FUTURES_PERPETUAL_COINS, FUTURES_PREDICTION_COINS, FUTURES_PREDICTION_TIMEFRAMES, FUTURES_PERPETUAL_TIMEFRAMES
 
 # --- Configuration ---
@@ -88,12 +87,10 @@ def process_and_send_alerts():
             
             if timeframe in FUTURES_PREDICTION_TIMEFRAMES and symbol in FUTURES_PREDICTION_COINS:
                 alert_to_send = {"alert_type": "Futures Prediction", "signal": original_signal}
-            # --- UPDATED: Added a check for the coin symbol ---
             elif timeframe in FUTURES_PERPETUAL_TIMEFRAMES and symbol in FUTURES_PERPETUAL_COINS:
                 alert_to_send = {"alert_type": "Futures Perpetual", "signal": "Long" if original_signal == "UP" else "Short"}
             
             if alert_to_send:
-                # Generate commentary only for high-confidence signals
                 if prediction_dict.get('confidence', 0) > 75:
                     prediction_dict['llm_insight'] = generate_commentary(prediction_dict)
 
