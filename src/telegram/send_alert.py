@@ -4,15 +4,14 @@ import requests
 import logging
 import sys
 from src.utils.database import get_db_connection
-from src.llm.service import generate_commentary # <-- ADDED THIS IMPORT
+from src.llm.service import generate_commentary
+# --- UPDATED: Import the new constant ---
+from src.shared.constants import FUTURES_PERPETUAL_COINS, FUTURES_PREDICTION_COINS, FUTURES_PREDICTION_TIMEFRAMES, FUTURES_PERPETUAL_TIMEFRAMES
 
 # --- Configuration ---
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 API_URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-FUTURES_PREDICTION_COINS = ['BTC', 'ETH', 'SOL'] 
-FUTURES_PREDICTION_TIMEFRAMES = ['10m', '30m', '1h', '1d']
-FUTURES_PERPETUAL_TIMEFRAMES = ['5m', '15m', '30m']
 ALERT_FLAG_PATH = "/workspace/data/alerts_on.flag"
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -32,10 +31,7 @@ def _send_telegram_message(text: str):
 def _format_alert(context: dict, alert_type: str, signal: str) -> str:
     price = context.get("price_at_prediction")
     price_str = f"${float(price):,.4f}" if price is not None else "N/A"
-    
-    # --- ADDED LLM COMMENTARY ---
     llm_insight = context.get('llm_insight', 'Commentary not available.')
-    # --- -------------------- ---
 
     return (
         f"🚨 *{alert_type.upper()} ALERT* 🚨\n\n"
@@ -44,7 +40,7 @@ def _format_alert(context: dict, alert_type: str, signal: str) -> str:
         f"💲 *Price at Alert:* `{price_str}`\n"
         f"📈 *Confidence:* `{float(context.get('confidence', 0)):.2f}%`\n"
         f"🎯 *RECOMMENDATION:* `{signal.upper()}`\n\n"
-        f"🤖 *AI Rationale:* {llm_insight}"  # <-- ADDED THIS LINE
+        f"🤖 *AI Rationale:* {llm_insight}"
     )
 
 def send_test_alert():
@@ -55,7 +51,6 @@ def send_test_alert():
         'confidence': 99.99,
         'price_at_prediction': 65432.10
     }
-    # For testing, we can generate a sample commentary
     test_context['llm_insight'] = generate_commentary(test_context)
     message = _format_alert(test_context, alert_type="Futures Prediction", signal="UP")
     _send_telegram_message(message)
@@ -93,15 +88,14 @@ def process_and_send_alerts():
             
             if timeframe in FUTURES_PREDICTION_TIMEFRAMES and symbol in FUTURES_PREDICTION_COINS:
                 alert_to_send = {"alert_type": "Futures Prediction", "signal": original_signal}
-            elif timeframe in FUTURES_PERPETUAL_TIMEFRAMES:
+            # --- UPDATED: Added a check for the coin symbol ---
+            elif timeframe in FUTURES_PERPETUAL_TIMEFRAMES and symbol in FUTURES_PERPETUAL_COINS:
                 alert_to_send = {"alert_type": "Futures Perpetual", "signal": "Long" if original_signal == "UP" else "Short"}
             
             if alert_to_send:
-                # --- ADDED LLM INTEGRATION ---
-                # Generate commentary only for high-confidence signals to save resources
+                # Generate commentary only for high-confidence signals
                 if prediction_dict.get('confidence', 0) > 75:
                     prediction_dict['llm_insight'] = generate_commentary(prediction_dict)
-                # --- ----------------------- ---
 
                 alert_message = _format_alert(
                     context=prediction_dict,

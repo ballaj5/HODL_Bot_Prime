@@ -10,11 +10,12 @@ services:
       - "8888:8888" # Jupyter
       - "8050:8050" # Streamlit
     volumes:
-      - .:/workspace # Mount the project directory
+      # Mount the entire project directory into /workspace
+      - .:/workspace
     env_file:
       - .env # Explicitly load the .env file
 
-  # This is the PostgreSQL database service
+  # This is the new PostgreSQL database service
   db:
     image: postgres:15
     environment:
