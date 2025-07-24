@@ -19,9 +19,9 @@ mkdir -p /workspace/data/finetuning
 mkdir -p /workspace/models_data
 mkdir -p /workspace/logs
 
-# Initialize the PostgreSQL database
-echo "🔍 Initializing database..."
-python3 -m src.utils.database init_db
+# --- THIS LINE IS REMOVED ---
+# The new db_manager handles its own setup, so this is no longer needed.
+# python3 -m src.utils.database init_db
 
 # --- Run the initial data pipeline ONCE ---
 echo "📊 Running initial data and training pipeline..."
@@ -40,6 +40,12 @@ python3 -m src.scheduler.retrain_scheduler &
 # 3. Launch the Real-time Feature Manager
 echo "📡 Launching the Real-time Feature Manager..."
 python3 -m src.data_fetch.realtime_manager &
+
+# --- THIS SHOULD BE THE MAIN TRADING BOT LOOP ---
+# I'm assuming one of the above scripts now handles the main loop.
+# If not, you would add:
+# echo "🧠 Starting main application trade loop..."
+# python3 -m src.trade_loop &
 
 echo "✅ All services are running. Tailing logs... (Press Ctrl+C to stop)"
 # The 'wait' command keeps the script alive so the Docker container doesn't exit

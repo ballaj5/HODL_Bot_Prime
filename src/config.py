@@ -1,36 +1,41 @@
 import os
-import sys
+from dotenv import load_dotenv
 
-# --- Read backend choice first ---
-LLM_BACKEND = os.getenv("LLM_BACKEND", "llama").lower()
+# Load environment variables from .env file for local development
+load_dotenv()
 
-# --- Define required keys based on backend ---
-required_keys = [
-    "TELEGRAM_BOT_TOKEN",
-    "TELEGRAM_CHAT_ID",
-    "BYBIT_API_KEY",
-    "BYBIT_API_SECRET",
-]
+class Config:
+    """
+    Configuration class for the application.
+    Uses os.environ to get environment variables.
+    This will raise a KeyError if a variable is not set,
+    which is good for "failing fast".
+    """
+    try:
+        TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+        TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+        API_KEY = os.environ["API_KEY"]
+        API_SECRET = os.environ["API_SECRET"]
+    except KeyError as e:
+        raise RuntimeError(f"Error: Missing critical environment variable: {e}") from e
 
-if LLM_BACKEND == "openai":
-    required_keys.append("OPENAI_API_KEY")
+    # Trading parameters
+    SYMBOL = 'BTC/USDT'
+    TIMEFRAME = '1h'
+    RSI_PERIOD = 14
+    RSI_OVERBOUGHT = 70
+    RSI_OVERSOLD = 30
+    AMOUNT = 0.001
 
-# --- Validate presence ---
-missing = [key for key in required_keys if not os.getenv(key)]
+    # Database
+    DB_PATH = "trading_bot.db"
 
-if missing:
-    print(f"❌ Missing required env variables for '{LLM_BACKEND}' backend: {', '.join(missing)}")
-    sys.exit(1)
+    # Model
+    MODEL_PATH = "model.pkl"
+    BACKUP_MODEL_PATH = "backup_model.pkl" # Path to a backup model
 
-print(f"✅ All required environment variables for '{LLM_BACKEND}' backend are present.")
+    # Logging
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
-# --- Optional strict type checks ---
-try:
-    interval = int(os.getenv("RETRAIN_INTERVAL_MINUTES", "30"))
-    if interval <= 0:
-        raise ValueError("Interval must be positive")
-except (ValueError, TypeError):
-    print("❌ Invalid value for RETRAIN_INTERVAL_MINUTES. Must be a positive integer.")
-    sys.exit(1)
-
-print("✅ All environment variables passed validation.")
+# Instantiate config
+config = Config()
