@@ -1,0 +1,33 @@
+# .runpod.yaml (RunPod serverless deployment)
+# This template assumes you have already built your app's Docker image
+# and pushed it to a container registry (e.g., Docker Hub).
+
+image: your-dockerhub-username/llama-crypto-bot:latest
+
+# The command to execute when the serverless worker starts.
+# This should be the entrypoint defined in your Dockerfile or a direct command.
+startCommand: bash start.sh
+
+ports:
+  # Expose the dashboard port. The 'public' port will be assigned by RunPod.
+  - port: 8050
+    name: dashboard
+    protocol: http
+    access: public
+
+# Mount network volumes to persist data and models between runs.
+# These volumes must be created in your RunPod account first.
+volumeMounts:
+  - name: crypto-bot-data
+    mountPath: /app/data
+  - name: crypto-bot-models
+    mountPath: /app/models
+  - name: crypto-bot-logs
+    mountPath: /app/logs
+
+# Define environment variables. Secrets should be set in the RunPod console.
+env:
+  LLM_COMMENTARY: "true"
+  TELEGRAM_HEALTH_ALERTS: "true"
+  ENV: "production"
+  # Set secret variables like TELEGRAM_BOT_TOKEN directly in the RunPod template settings.

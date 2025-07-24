@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # This is your main Python application
+  app:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - "8888:8888" # Jupyter
+      - "8050:8050" # Streamlit
+    volumes:
+      - .:/workspace # Mount the project directory
+    env_file:
+      - .env # Explicitly load the .env file
+
+  # This is the PostgreSQL database service
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=mydatabase
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
